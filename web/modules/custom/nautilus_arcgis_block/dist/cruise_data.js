@@ -1,1 +1,0 @@
-!function(a,c){c.behaviors.cruiseData={attach:async function(a,c){console.log(c.cruiseName+" from cruise page context")}}}(jQuery,Drupal);
