@@ -1,0 +1,3 @@
+configure nautilus settings:
+  title: 'Configure Nautilus settings'
+  description: 'Change system-wide settings for Nautilus Live.'

@@ -1,0 +1,4 @@
+toggle-switch:
+  css:
+    theme:
+      css/toggle-switch.css: {}

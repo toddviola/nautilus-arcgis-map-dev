@@ -1,0 +1,6 @@
+nautilus_config.settings_form:
+  title: 'Nautilus Live settings'
+  route_name: nautilus_config.settings_form
+  description: 'Configure site-wide settings'
+  parent: system.admin_config_system
+  weight: 99

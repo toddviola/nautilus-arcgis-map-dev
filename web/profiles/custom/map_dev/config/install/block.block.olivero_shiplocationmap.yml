@@ -1,0 +1,25 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - nautilus_arcgis_block
+    - system
+  theme:
+    - olivero
+id: olivero_shiplocationmap
+theme: olivero
+region: content
+weight: -6
+provider: null
+plugin: nautilus_arcgis_block_ship_location_map
+settings:
+  id: nautilus_arcgis_block_ship_location_map
+  label: 'Ship location map'
+  label_display: visible
+  provider: nautilus_arcgis_block
+  show_ship_track: 1
+visibility:
+  request_path:
+    id: request_path
+    negate: false
+    pages: '<front>'

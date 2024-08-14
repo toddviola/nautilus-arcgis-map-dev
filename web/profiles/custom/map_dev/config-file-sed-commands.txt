@@ -1,0 +1,2 @@
+find ./web/profiles/custom/map_dev/config/install/ -type f -exec sed -i -e '/^uuid: /d' {} \;
+find ./web/profiles/custom/map_dev/config/install/ -type f -exec sed -i -e '/_core:/,+1d' {} \;

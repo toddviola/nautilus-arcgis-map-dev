@@ -1,0 +1,5 @@
+name: 'Nautilus Configuration'
+type: module
+description: 'Establish Nautilus Live configuration settings, permissions, and UI customizations.'
+core_version_requirement: ^9 || ^10
+package: 'Nautilus Live'

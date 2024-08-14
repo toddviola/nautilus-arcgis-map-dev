@@ -1,0 +1,166 @@
+<?php
+
+/**
+ * @file
+ * Contains nautilus_config.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\views\ViewExecutable;
+use Drupal\taxonomy\Entity\Term;
+
+/**
+ * Implements hook_help().
+ */
+function nautilus_config_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the nautilus_config module.
+    case 'help.page.nautilus_config':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Set up configuration settings, permissions, and UI customizations.') . '</p>';
+      return $output;
+
+    default:
+  }
+}
+
+
+// Make homepage template suggestions based on homepage mode setting.
+function nautilus_config_theme_suggestions_page_alter(array &$suggestions, array $variables) {
+
+  // Get homepage mode from Nautilus Live settings
+  $config = \Drupal::config('nautilus_config.settings');
+  $homepage_mode = str_replace('-', '_', $config->get('homepage_mode'));
+
+  // Add a page template suggestion for individual content types.
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if ($node instanceof \Drupal\node\NodeInterface) {
+    $suggestions[] = 'page__' . $node->bundle();
+    // Additionally, use the homepage mode template on live video nodes.
+    if ($node->bundle() == 'live') {
+      $suggestions[] = 'page__' . $node->bundle() . '__' . $homepage_mode;
+    // Use the homepage mode template for other nodes (video) when they are the font page.
+    // } elseif (\Drupal::service('path.matcher')->isFrontPage()) {
+    //   $suggestions[] = 'page__front__' . $homepage_mode;
+    }
+  } 
+
+  return $suggestions;
+}
+
+
+/**
+ * Implements hook_preprocess_HOOK().
+ *
+ */
+// Add homepage body class based on homepage mode setting.
+function nautilus_config_preprocess_html(&$variables) {
+
+  // Get homepage mode from Nautilus Live settings
+  $config = \Drupal::config('nautilus_config.settings');
+  $homepage_mode = $config->get('homepage_mode');
+
+  // Add a page template suggestion for individual content types.
+  $node = \Drupal::routeMatch()->getParameter('node');
+  if ($node instanceof \Drupal\node\NodeInterface) {
+    // Additionally, use the homepage mode template on live video nodes or on front page.
+    if ($node->bundle() == 'live' || \Drupal::service('path.matcher')->isFrontPage()) {
+      $variables['attributes']['class'][] = 'page--' . $homepage_mode;
+    }
+  } 
+
+  if (isset($path_args[1]) && isset($path_args[2]) && ($path_args[1] == 'node') && (is_numeric($path_args[2]))) {
+    $variables['attributes']['class'][] = 'page-node-' . $path_args[2];
+  }
+}
+
+
+function nautilus_config_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
+
+  // Get current expedition from settings.
+  $config = \Drupal::config('nautilus_config.settings');
+  $current_expedition_tid = $config->get('current_expedition');
+  $highlight_video = $config->get('homepage_highlight_video');
+
+  if ($current_expedition_tid) {
+    // Load cruise taxonomy term.
+    $cruise = Term::load($current_expedition_tid);
+
+    // If the main People view does not already have a filter argument, use the cruise name from the settings.
+    if ($view->id() == 'people') {
+      if ($display_id === 'page_4' || $display_id === 'block_3') { // Main Team page or Science headshot page
+        if (!isset($args[0])) {
+          //$args[0] = $cruise->getName();
+          $args[0] = $current_expedition_tid;
+        }
+      }
+    }
+
+    // Use the cruise name from settings as the argument in the current expedition view
+    if ($view->id() == 'current_expedition') {
+      if (!isset($args[0])) {
+        $args[0] = $cruise->getName();
+      }
+    }
+  }
+
+  if ($highlight_video) {
+    // Exclude the current homepage hghlight video from the Gallery latest 3 block on the homepage.
+    if ($view->id() == 'gallery') {
+      if ($display_id === 'block_4') { // Latest 3 block
+        //if (!isset($args[0])) {
+          $args[0] = $highlight_video;
+        //}
+      }
+    }
+  }
+
+  
+}
+
+
+
+function nautilus_config_views_post_execute(ViewExecutable $view) {
+
+  // Target current watch view
+  if ($view->id() == 'current_watch') {
+    // Get current expedition from settings.
+    $config = \Drupal::config('nautilus_config.settings');
+    $timezone_offset = $config->get('ship_time_zone');
+    // If the timezone offset is set
+    if($timezone_offset) {
+      // Run through the view results. Should be all published watches.
+      $results = $view->result;
+      foreach ($results as $key => $item) {
+        // Load the watch by id.
+        $watch = \Drupal::entityTypeManager()->getStorage('nautilus_content')->load($item->id);
+        // Get the values of the start and end time fields.
+        $start_time = $watch->get('field_watch_start')->first()->getValue()['value'];
+        $end_time = $watch->get('field_watch_end')->first()->getValue()['value'];
+        // Trap potential problem around midnight.
+        $end_time = ($end_time == '24:00' ? '23:59:59' : $end_time);
+        // Convert string values for start and end times into PHP dates, using format hh:mm
+        $start = date("H:i",strtotime($start_time));
+        $end = date("H:i",strtotime($end_time));
+        // Compute offset to account for difference in ship time vs. GMT
+        // For GMT+3, add 3 hours (180 minutes) + 10 minutes to assure watches change a little ahead of schedule.
+        // Pacific Daylight Time (GMT-07) = -7 * 60 +10 = -420 + 10 = -410
+        $offset = (60 * $timezone_offset) + 10;
+        // Determine the current time, also in hh:mm, and add the offset.
+        $now = date("H:i",strtotime("now " . $offset . " minutes"));
+        // Compare watch start and end times. 
+        // If the current time doesn't fall in this watch, remove this watch from the result array.
+        if (!(($now >= $start) && ($now < $end))) {
+          unset($view->result[$key]);
+        }
+      }
+      // At the end, $view->result should only contain one item, the current watch.
+      // If there are no results (all watches unpublished), then hide the view block
+      // entirely. This avoids displaying the block heading with no results.
+      if (count($view->result) == 0) {
+        $view->build_info['fail'] = TRUE;
+      }
+    }
+  }
+}

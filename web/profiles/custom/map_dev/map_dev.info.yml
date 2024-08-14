@@ -1,0 +1,40 @@
+name: 'Nautilus ArcGIS Map Dev'
+type: profile
+description: 'Contains the basic configuration needed to display the custom map module.'
+core_version_requirement: '^10'
+
+# Modules to install to support the profile.
+install:               
+  - breakpoint             
+  - config                 
+  - contextual             
+  - dblog                  
+  - dynamic_page_cache     
+  - field                  
+  - filter                 
+  - mysql                                   
+  - page_cache             
+  - path_alias             
+  - system                              
+  - text                   
+  - toolbar                
+  - update                 
+  - user                                  
+  - admin_toolbar          
+  - admin_toolbar_tools    
+  - nautilus_arcgis_block  
+  - nautilus_config
+
+# Required modules. These cannot be uninstalled.
+# Note that any dependencies of the modules listed here will be installed automatically.
+dependencies:
+  - node
+  - block
+  - taxonomy
+  - views
+
+# List any themes that should be installed as part of the profile installation.
+# Note that this will not set any theme as the default theme.
+themes:
+  - olivero
+  - claro

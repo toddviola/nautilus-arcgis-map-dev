@@ -1,0 +1,9 @@
+nautilus_config.settings_form:
+  path: 'admin/config/system/nautilus_config'
+  defaults:
+    _form: '\Drupal\nautilus_config\Form\SettingsForm'
+    _title: 'Nautilus Live settings'
+  requirements:
+    _permission: 'configure nautilus settings'
+  options:
+    _admin_route: TRUE
