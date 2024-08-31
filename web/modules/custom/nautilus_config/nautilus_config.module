@@ -31,7 +31,7 @@ function nautilus_config_theme_suggestions_page_alter(array &$suggestions, array
 
   // Get homepage mode from Nautilus Live settings
   $config = \Drupal::config('nautilus_config.settings');
-  $homepage_mode = str_replace('-', '_', $config->get('homepage_mode'));
+  $homepage_mode = str_replace('-', '_', $config->get('homepage_mode') ?? '');
 
   // Add a page template suggestion for individual content types.
   $node = \Drupal::routeMatch()->getParameter('node');
