@@ -59,7 +59,7 @@ final class ShipLocationMapBlock extends BlockBase {
         'nautilus_arcgis_block/ship-location'
       ],
       'drupalSettings' => [
-        'showShipTrack' => false,
+        'showShipTrack' => true,
         'cruiseName' => $current_expedition_name,
       ]
     ];
