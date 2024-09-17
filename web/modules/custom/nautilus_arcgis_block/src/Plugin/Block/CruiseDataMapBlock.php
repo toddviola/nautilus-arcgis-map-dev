@@ -55,13 +55,14 @@ final class CruiseDataMapBlock extends BlockBase {
 
     $example_setting = $this->configuration['example'];
 
+    // If block appears on a taxonomy term page, get the term name.
     $params = \Drupal::routeMatch()->getParameters()->all();
     $context_expedition_name = "";
     if (isset($params['taxonomy_term'])) {
       $context_expedition_name = $params['taxonomy_term']->getName();
     }
 
-
+    // Attach mapping javascript library and pass term name as a setting.
     $build['#attached'] = [
       'library' => [
         'nautilus_arcgis_block/cruise-data'
@@ -71,6 +72,14 @@ final class CruiseDataMapBlock extends BlockBase {
       ]
     ];
 
+    // Make sure the block is cached per URL, not globally.
+    $build['#cache'] = [
+      'contexts' => [
+        'url.path'
+      ]
+    ];
+
+    // Include map container div in block content.
     $build['content'] = [
       '#markup' => '<div id="cruise-data-map-container" class="arcgis-map"></div>',
     ];
