@@ -16,7 +16,7 @@
     async function startApp({cruiseName}, modules) {
         const {Basemap, WebMap, Expand, FeatureLayer, Fullscreen, Graphic, LayerList, MapView} = modules;
         // Current cruise from Nautilus Live website settings.
-        console.log(`Cruise: ${cruiseName} from website setting`); 
+        console.log(`Cruise: ${cruiseName} from cruise page context`); 
         
         async function asGraphicsLayer(layer) {
             await layer.load();
