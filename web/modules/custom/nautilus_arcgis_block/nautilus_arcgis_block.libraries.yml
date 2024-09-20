@@ -1,14 +1,24 @@
-# CSS for all ArcGIS maps
+# Dependencies for all ArcGIS maps
 common:
+  js:
+    //js.arcgis.com/4.30/:
+      attributes:
+        crossorigin: 'anonymous'
+        defer: true  # Important to mark as deferred to help ensure that core jQuery loads first
+        integrity: 'sha384-TIL032wEvyLso0oU3aF8lN7RELIWJdKR4/Msp3SIjPlLyY35yjs4MfmH++Cyimix'
+      minified: true
+      type: external
   css:
     theme:
-      '//js.arcgis.com/4.29/esri/themes/light/main.css': {type: external, minified: true}
+      '//js.arcgis.com/4.30/esri/themes/light/main.css': {type: external, minified: true}
       'dist/common.css': {}
 
 # Script to render a specific map
 ship-location:
   js:
-    'dist/ship_location.js': {preprocess: false}
+    'assets/ship-location.js':
+      attributes: {defer: true}
+      preprocess: false
   dependencies:
     - core/drupal
     - core/jquery
@@ -18,7 +28,9 @@ ship-location:
 # Script to render a specific map
 cruise-data:
   js:
-    'dist/cruise_data.js': {preprocess: false}
+    'assets/cruise-data.js':
+      attributes: {defer: true}
+      preprocess: false
   dependencies:
     - core/drupal
     - core/jquery
