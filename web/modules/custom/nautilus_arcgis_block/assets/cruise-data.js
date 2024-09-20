@@ -11,10 +11,11 @@
         'esri/widgets/Expand',
         'esri/widgets/Fullscreen',
         'esri/widgets/LayerList',
+        'esri/widgets/Legend',
     ];
 
     async function startApp({cruiseName}, modules) {
-        const {Basemap, WebMap, Expand, FeatureLayer, Fullscreen, Graphic, LayerList, MapView} = modules;
+        const {Basemap, WebMap, Expand, FeatureLayer, Fullscreen, Graphic, LayerList, Legend, MapView} = modules;
         // Current cruise from Nautilus Live website settings.
         console.log(`Cruise: ${cruiseName} from cruise page context`);
 
@@ -106,6 +107,7 @@
             view: view,
         });
         view.ui.add(layerListExpand, 'top-right');
+        new Legend({container: document.getElementById(MAP_LEGEND_ID), view});
 
         await webmap.load();
         view.zoom = view.zoom - 1; // zoom out a little to better view all features on load

@@ -4,3 +4,10 @@
   padding: 0;
   width: 100%;
 }
+
+#map-legend > div {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.esri-legend__service { border-bottom: none; }
