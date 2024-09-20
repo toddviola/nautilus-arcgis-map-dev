@@ -1,10 +1,11 @@
+import {asGraphicsLayer} from './util/layers.js';
+
 (function ($, Drupal) {
     const MAP_CONTAINER_ID = 'cruise-data-map-container';
     const MAP_LEGEND_ID = 'map-legend';
     const OET_CRUISES_MASTER_PORTAL_ITEM_ID = '29a7597cb7174df085edd33ac8613a43';
     const ESRI_MODULES = [
         'esri/Basemap',
-        'esri/Graphic',
         'esri/WebMap',
         'esri/layers/FeatureLayer',
         'esri/views/MapView',
@@ -15,28 +16,9 @@
     ];
 
     async function startApp({cruiseName}, modules) {
-        const {Basemap, WebMap, Expand, FeatureLayer, Fullscreen, Graphic, LayerList, Legend, MapView} = modules;
+        const {Basemap, WebMap, Expand, FeatureLayer, Fullscreen, LayerList, Legend, MapView} = modules;
         // Current cruise from Nautilus Live website settings.
         console.log(`Cruise: ${cruiseName} from cruise page context`);
-
-        async function asGraphicsLayer(layer, options = {}) {
-            await layer.load();
-            let query = layer.createQuery();
-            query.where = layer.definitionExpression;
-            const {features, fields, geometryType, spatialReference} = await layer.queryFeatures(query);
-            const graphics = features.map(({attributes, geometry}) => new Graphic({attributes: attributes, geometry}));
-            const graphicsLayer = new FeatureLayer({
-                fields,
-                geometryType,
-                popupTemplate: layer.popupTemplate,
-                renderer: layer.renderer,
-                source: graphics,
-                spatialReference,
-                title: layer.title.replace('OET Cruises master CCOM configured - ', ''),
-                ...options,
-            });
-            return graphicsLayer;
-        }
 
         const shipTrack = await asGraphicsLayer(new FeatureLayer({
             portalItem: {
