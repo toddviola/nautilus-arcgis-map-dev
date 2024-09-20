@@ -33,6 +33,7 @@ cruise-data:
       preprocess: false
   dependencies:
     - core/drupal
+    - core/drupal.message
     - core/drupalSettings
     - core/jquery
     - nautilus_arcgis_block/common

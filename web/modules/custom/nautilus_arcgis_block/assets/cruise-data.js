@@ -81,6 +81,11 @@
             }
         }
 
+        if (layers.length == 0) {
+            // There's nothing to display on a map.
+            return false;
+        }
+
         async function fullExtent() {
             const {extent} = await shipTrack.queryExtent();
             return extent;
@@ -111,6 +116,7 @@
 
         await webmap.load();
         view.zoom = view.zoom - 1; // zoom out a little to better view all features on load
+        return true;
     }
 
     Drupal.behaviors.cruiseData = {
@@ -124,7 +130,14 @@
                         memo[moduleName] = item
                         return memo;
                     }, {});
-                    startApp(settings, importMapping);
+                    (async() => {
+                        const mapRendered = await startApp(settings, importMapping);
+                        if (!mapRendered) {
+                            $(MAP_CONTAINER_ID).attr('data-drupal-messages', true)
+                            const messenger = new Drupal.Message();
+                            messenger.add(`No map data available for ${settings.cruiseName}`, {type: 'error'});
+                        }
+                    })();
                 });
             } catch (err) {
                 console.error('Failed to start app', err);
