@@ -30,9 +30,6 @@
 # Ignore node_modules everywhere
 node_modules/
 
-# Ignore compiled JS & CSS in custom modules
-/web/modules/custom/*/dist
-
 #Ignore other Git projects
 web/*/.git
 
