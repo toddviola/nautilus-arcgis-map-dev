@@ -11,7 +11,7 @@ common:
   css:
     theme:
       '//js.arcgis.com/4.30/esri/themes/light/main.css': {type: external, minified: true}
-      'dist/common.css': {}
+      'assets/arcgis-map.css': {}
 
 # Script to render a specific map
 ship-location:
@@ -21,8 +21,8 @@ ship-location:
       preprocess: false
   dependencies:
     - core/drupal
-    - core/jquery
     - core/drupalSettings
+    - core/jquery
     - nautilus_arcgis_block/common
 
 # Script to render a specific map
@@ -33,6 +33,6 @@ cruise-data:
       preprocess: false
   dependencies:
     - core/drupal
-    - core/jquery
     - core/drupalSettings
+    - core/jquery
     - nautilus_arcgis_block/common
