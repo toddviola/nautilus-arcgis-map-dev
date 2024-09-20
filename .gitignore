@@ -33,5 +33,5 @@ node_modules/
 #Ignore other Git projects
 web/*/.git
 
-#Ignore ddev fiels
+#Ignore ddev files
 .ddev/
