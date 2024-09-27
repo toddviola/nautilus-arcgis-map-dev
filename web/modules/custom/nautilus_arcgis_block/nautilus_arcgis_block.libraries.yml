@@ -17,7 +17,9 @@ common:
 ship-location:
   js:
     'assets/ship-location.js':
-      attributes: {defer: true}
+      attributes:
+        defer: true
+        type: module
       preprocess: false
   dependencies:
     - core/drupal
