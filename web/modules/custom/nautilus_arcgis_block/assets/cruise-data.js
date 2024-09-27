@@ -1,3 +1,4 @@
+import {requireModules} from './util/imports.js';
 import {asGraphicsLayer} from './util/layers.js';
 
 (function ($, Drupal) {
@@ -15,11 +16,16 @@ import {asGraphicsLayer} from './util/layers.js';
         'esri/widgets/Legend',
     ];
 
-    async function startApp({cruiseName}, modules) {
-        const {Basemap, WebMap, Expand, FeatureLayer, Fullscreen, LayerList, Legend, MapView} = modules;
-        // Current cruise from Nautilus Live website settings.
-        console.log(`Cruise: ${cruiseName} from cruise page context`);
-
+    async function renderMap(cruiseName, {
+        Basemap,
+        Expand,
+        FeatureLayer,
+        Fullscreen,
+        LayerList,
+        Legend,
+        MapView,
+        WebMap,
+    }) {
         const shipTrack = await asGraphicsLayer(new FeatureLayer({
             portalItem: {
                 id: OET_CRUISES_MASTER_PORTAL_ITEM_ID,
@@ -101,16 +107,22 @@ import {asGraphicsLayer} from './util/layers.js';
         return true;
     }
 
+    async function startApp({cruiseName}, modules) {
+        // Current cruise from Nautilus Live website settings.
+        console.log(`Cruise: ${cruiseName} from cruise page context`);
+
+        const mapRendered = await renderMap(cruiseName, modules);
+        if (!mapRendered) {
+            const messenger = new Drupal.Message();
+            messenger.add(`No map data available for ${cruiseName}`, {type: 'error'});
+        }
+    }
+
     Drupal.behaviors.cruiseData = {
         async attach(context, settings) {
             const imports = await requireModules(ESRI_MODULES);
             try {
-                const mapRendered = await startApp(settings, imports);
-                        if (!mapRendered) {
-                            $(MAP_CONTAINER_ID).attr('data-drupal-messages', true)
-                            const messenger = new Drupal.Message();
-                            messenger.add(`No map data available for ${settings.cruiseName}`, {type: 'error'});
-                        }
+                await startApp(settings, imports);
             } catch (err) {
                 console.error('Failed to start app', err);
             }
