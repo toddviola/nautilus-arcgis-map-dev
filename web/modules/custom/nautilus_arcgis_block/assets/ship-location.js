@@ -1,35 +1,40 @@
-import WebMap from "@arcgis/core/WebMap.js";
-import Basemap from "@arcgis/core/Basemap.js";
-import MapView from "@arcgis/core/views/MapView.js";
-import Fullscreen from "@arcgis/core/widgets/Fullscreen.js";
-import FeatureLayer from "@arcgis/core/layers/FeatureLayer.js";
-import * as reactiveUtils from "@arcgis/core/core/reactiveUtils.js";
+import {requireModules} from './util/imports.js';
+import {asGraphicsLayer} from './util/layers.js';
 
 (function ($, Drupal) {
-Drupal.behaviors.shipLocation = { 
-    attach: async function(context, settings) {
+    const ESRI_MODULES = [
+        'esri/Basemap',
+        'esri/WebMap',
+        'esri/layers/FeatureLayer',
+        'esri/views/MapView',
+        'esri/widgets/Fullscreen',
+        'esri/core/reactiveUtils',
+    ];
+    const MAP_CONTAINER_ID = 'ship-location-map-container';
+    const DEFAULT_ZOOM = 8;
+    const REFRESH_INTERVAL_MINUTES = 5;
+    // Recenter on ship approximatly every 5 minutes.
+    // * 'Approximately' because the centerOnShip function awaits some Promises before actually
+    // recentering the map so it may be a bit longer than 5 minutes.
+    const RECENTER_INTERVAL_MILLISECONDS = REFRESH_INTERVAL_MINUTES * 60 * 1000;
+    const VEHICLE_POSITIONS_PORTAL_ITEM_ID = '871f7733569c437f9eeebf94d72cb6bc';
+    const VEHICLE_TRACKS_PORTAL_ITEM_ID = '6d4cf4d625e74c35b82fbed71166be50';
 
-        //console.log(settings);
-
-        const DEFAULT_ZOOM = 8;
-        const REFRESH_INTERVAL_MINUTES = 5;
-        // Recenter on ship approximatly every 5 minutes.
-        // * "Approximately" because the centerOnShip function awaits some Promises before actually
-        // recentering the map so it may be a bit longer than 5 minutes.
-        const RECENTER_INTERVAL_MILLISECONDS = REFRESH_INTERVAL_MINUTES * 60 * 1000;
-        const VEHICLE_POSITIONS_PORTAL_ITEM_ID = '871f7733569c437f9eeebf94d72cb6bc';
-        const VEHICLE_TRACKS_PORTAL_ITEM_ID = '6d4cf4d625e74c35b82fbed71166be50';
-        const SHOW_SHIP_TRACK = settings['showShipTrack']; // setting from Drupal block;
-
-        console.log(settings['cruiseName'] + ' from website setting'); // Current cruise from Nautilus Live website settings.
-
+    async function startApp({cruiseName, showShipTrack}, {
+        Basemap,
+        FeatureLayer,
+        Fullscreen,
+        MapView,
+        WebMap,
+        reactiveUtils,
+    }) {
+        // Current cruise from Nautilus Live website settings.
+        console.log(`${cruiseName} from website setting`);
         const layers = [];
-        let recenterTimeout;
         let userHasInteracted;
 
         async function getCurrentCruiseId() {
             await nautilusLayer.load();
-            let currentCruise;
             try {
                 return (await nautilusLayer.queryFeatures()).features[0].attributes.cruise;
             } catch (err) {
@@ -44,17 +49,17 @@ Drupal.behaviors.shipLocation = {
                 console.warn('Not adding ship track layer because current cruise is unknown');
                 return
             } else {
-                console.log(currentCruise + ' from queryFeatures');
+                console.log(`${currentCruise} from queryFeatures`);
             }
 
-            let definitionExpression = `vehicle = 'Nautilus' AND cruise = '${currentCruise}'`;
-            const shipTrackLayer = new FeatureLayer({
+            const shipTrackLayer = await asGraphicsLayer(new FeatureLayer({
                 portalItem: {
                     id: VEHICLE_TRACKS_PORTAL_ITEM_ID,
                 },
-                definitionExpression,
+                definitionExpression: `vehicle = 'Nautilus' AND cruise = '${currentCruise}'`,
                 layerId: 0,
                 opacity: 1,
+                refreshInterval: 0, // will refresh manually
                 renderer: {
                     symbol: {
                         color: '#990000', // dark red
@@ -63,16 +68,18 @@ Drupal.behaviors.shipLocation = {
                     },
                     type: 'simple',
                 },
-            });
+            }));
             layers.push(shipTrackLayer);
         }
-        const nautilusLayer = new FeatureLayer({
+
+        const nautilusLayer = await asGraphicsLayer(new FeatureLayer({
             portalItem: {
                 id: VEHICLE_POSITIONS_PORTAL_ITEM_ID,
             },
             definitionExpression: "vehicle = 'Nautilus'",
             layerId: 0,
             opacity: 1,
+            refreshInterval: 0, // will refresh manually
             renderer: {
                 symbol: {
                     angle: 180,
@@ -93,21 +100,39 @@ Drupal.behaviors.shipLocation = {
                     },
                 ],
             },
-        });
+        }));
         layers.push(nautilusLayer);
 
-        if (SHOW_SHIP_TRACK) {
+        if (showShipTrack) {
             await addShipTrackLayer();
         }
 
         async function centerOnShip() {
             await view.goTo(await shipExtent());
-            if (userHasInteracted) {return;}
-            recenterTimeout = setTimeout(centerOnShip, RECENTER_INTERVAL_MILLISECONDS, webmap, view);
         }
 
+        async function refresh() {
+            for (const layer of webmap.layers) {
+                refreshLayer(layer);
+            }
+            if (!userHasInteracted) {
+                centerOnShip();
+            }
+        }
+
+        async function refreshLayer(layer) {
+            const replacement = await asGraphicsLayer(layer.sourceLayer);
+            webmap.remove(layer);
+            webmap.add(replacement);
+        }
+
+        globalThis.refreshLayer = refreshLayer
+        globalThis.layers = layers;
+        globalThis.refresh = refresh;
+        globalThis.centerOnShip = centerOnShip;
+
         async function shipExtent() {
-            const {extent} = await nautilusLayer.queryExtent();
+            const {extent} = await nautilusLayer.sourceLayer.queryExtent();
             extent.zoom = DEFAULT_ZOOM;
             return extent;
         }
@@ -115,28 +140,38 @@ Drupal.behaviors.shipLocation = {
         async function watchForUserInteraction() {
             await reactiveUtils.whenOnce(() => view.interacting || view.zoom != DEFAULT_ZOOM);
             userHasInteracted = true;
-            clearTimeout(recenterTimeout);
         }
 
         const webmap = new WebMap({
             basemap: Basemap.fromId('oceans'),
-            layers,
+            layers: layers,
         });
         const {center} = await shipExtent();
         const view = new MapView({
             center,
-            container: 'ship-location-map-container',
+            container: MAP_CONTAINER_ID,
             map: webmap,
             zoom: DEFAULT_ZOOM,
         });
         const fullscreen = new Fullscreen({
             view: view,
         });
-        view.ui.add(fullscreen, "top-right");
+        view.ui.add(fullscreen, 'top-right');
 
         await webmap.load();
         watchForUserInteraction();
+
+        setInterval(refresh, RECENTER_INTERVAL_MILLISECONDS);
     }
 
-};
+    Drupal.behaviors.shipLocation = {
+        async attach(context, settings) {
+            const imports = await requireModules(ESRI_MODULES);
+            try {
+                await startApp(settings, imports);
+            } catch (err) {
+                console.error('Failed to start app', err);
+            }
+        }
+    };
 })(jQuery, Drupal);
