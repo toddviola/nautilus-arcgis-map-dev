@@ -102,25 +102,15 @@ import {asGraphicsLayer} from './util/layers.js';
     }
 
     Drupal.behaviors.cruiseData = {
-        attach(context, settings) {
+        async attach(context, settings) {
+            const imports = await requireModules(ESRI_MODULES);
             try {
-                require(ESRI_MODULES, function(...imports) {
-                    // Create an object mapping the imports to their module name so that we don't have to keep track
-                    // of load order
-                    const importMapping = imports.reduce((memo, item, idx) => {
-                        const moduleName = ESRI_MODULES[idx].split('/').pop();
-                        memo[moduleName] = item
-                        return memo;
-                    }, {});
-                    (async() => {
-                        const mapRendered = await startApp(settings, importMapping);
+                const mapRendered = await startApp(settings, imports);
                         if (!mapRendered) {
                             $(MAP_CONTAINER_ID).attr('data-drupal-messages', true)
                             const messenger = new Drupal.Message();
                             messenger.add(`No map data available for ${settings.cruiseName}`, {type: 'error'});
                         }
-                    })();
-                });
             } catch (err) {
                 console.error('Failed to start app', err);
             }
