@@ -97,7 +97,7 @@ import {asGraphicsLayer} from './util/layers.js';
         const layerListExpand = new Expand({
             content: layerList,
             expandIcon: 'layers',  // see https://developers.arcgis.com/calcite-design-system/icons/
-            view: view,
+            view,
         });
         view.ui.add(layerListExpand, 'top-right');
         new Legend({container: document.getElementById(MAP_LEGEND_ID), view});
