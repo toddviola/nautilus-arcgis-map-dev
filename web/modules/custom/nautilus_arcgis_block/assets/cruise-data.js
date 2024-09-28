@@ -3,7 +3,6 @@ import {asGraphicsLayer} from './util/layers.js';
 
 (function ($, Drupal) {
     const MAP_CONTAINER_ID = 'cruise-data-map-container';
-    const MAP_LEGEND_ID = 'map-legend';
     const OET_CRUISES_MASTER_PORTAL_ITEM_ID = '29a7597cb7174df085edd33ac8613a43';
     const ESRI_MODULES = [
         'esri/Basemap',
@@ -100,7 +99,18 @@ import {asGraphicsLayer} from './util/layers.js';
             view,
         });
         view.ui.add(layerListExpand, 'top-right');
-        new Legend({container: document.getElementById(MAP_LEGEND_ID), view});
+
+        const legend = new Legend({
+            container: document.createElement('div'),
+            view,
+        });
+        const legendExpand = new Expand({
+            content: legend,
+            expandIcon: 'legend',
+            expandTooltip: 'Show Legend',
+            view,
+        });
+        view.ui.add(legendExpand, 'top-right');
 
         await webmap.load();
         view.zoom = view.zoom - 1; // zoom out a little to better view all features on load
