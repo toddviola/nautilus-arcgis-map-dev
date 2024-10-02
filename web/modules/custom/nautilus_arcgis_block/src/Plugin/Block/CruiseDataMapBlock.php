@@ -81,11 +81,10 @@ final class CruiseDataMapBlock extends BlockBase {
 
     // Include map container div in block content.
     $build['content'] = [
-      '#markup' => 
+      '#markup' =>
         '<section>
           <div data-drupal-messages></div>
           <div id="cruise-data-map-container" class="arcgis-map"></div>
-          <div id="map-legend"></div>
         </section>',
     ];
 

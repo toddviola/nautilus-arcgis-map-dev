@@ -1,10 +1,11 @@
+import {requireModules} from './util/imports.js';
+import {asGraphicsLayer} from './util/layers.js';
+
 (function ($, Drupal) {
     const MAP_CONTAINER_ID = 'cruise-data-map-container';
-    const MAP_LEGEND_ID = 'map-legend';
     const OET_CRUISES_MASTER_PORTAL_ITEM_ID = '29a7597cb7174df085edd33ac8613a43';
     const ESRI_MODULES = [
         'esri/Basemap',
-        'esri/Graphic',
         'esri/WebMap',
         'esri/layers/FeatureLayer',
         'esri/views/MapView',
@@ -14,30 +15,16 @@
         'esri/widgets/Legend',
     ];
 
-    async function startApp({cruiseName}, modules) {
-        const {Basemap, WebMap, Expand, FeatureLayer, Fullscreen, Graphic, LayerList, Legend, MapView} = modules;
-        // Current cruise from Nautilus Live website settings.
-        console.log(`Cruise: ${cruiseName} from cruise page context`);
-
-        async function asGraphicsLayer(layer, options = {}) {
-            await layer.load();
-            let query = layer.createQuery();
-            query.where = layer.definitionExpression;
-            const {features, fields, geometryType, spatialReference} = await layer.queryFeatures(query);
-            const graphics = features.map(({attributes, geometry}) => new Graphic({attributes: attributes, geometry}));
-            const graphicsLayer = new FeatureLayer({
-                fields,
-                geometryType,
-                popupTemplate: layer.popupTemplate,
-                renderer: layer.renderer,
-                source: graphics,
-                spatialReference,
-                title: layer.title.replace('OET Cruises master CCOM configured - ', ''),
-                ...options,
-            });
-            return graphicsLayer;
-        }
-
+    async function renderMap(cruiseName, {
+        Basemap,
+        Expand,
+        FeatureLayer,
+        Fullscreen,
+        LayerList,
+        Legend,
+        MapView,
+        WebMap,
+    }) {
         const shipTrack = await asGraphicsLayer(new FeatureLayer({
             portalItem: {
                 id: OET_CRUISES_MASTER_PORTAL_ITEM_ID,
@@ -109,36 +96,44 @@
         const layerListExpand = new Expand({
             content: layerList,
             expandIcon: 'layers',  // see https://developers.arcgis.com/calcite-design-system/icons/
-            view: view,
+            expandTooltip: 'Show Layer List',
+            view,
         });
         view.ui.add(layerListExpand, 'top-right');
-        new Legend({container: document.getElementById(MAP_LEGEND_ID), view});
+
+        const legend = new Legend({
+            container: document.createElement('div'),
+            view,
+        });
+        const legendExpand = new Expand({
+            content: legend,
+            expandIcon: 'legend',
+            expandTooltip: 'Show Legend',
+            view,
+        });
+        view.ui.add(legendExpand, 'top-right');
 
         await webmap.load();
         view.zoom = view.zoom - 1; // zoom out a little to better view all features on load
         return true;
     }
 
+    async function startApp({cruiseName}, modules) {
+        // Current cruise from Nautilus Live website settings.
+        console.log(`Cruise: ${cruiseName} from cruise page context`);
+
+        const mapRendered = await renderMap(cruiseName, modules);
+        if (!mapRendered) {
+            const messenger = new Drupal.Message();
+            messenger.add(`No map data available for ${cruiseName}`, {type: 'error'});
+        }
+    }
+
     Drupal.behaviors.cruiseData = {
-        attach(context, settings) {
+        async attach(context, settings) {
+            const imports = await requireModules(ESRI_MODULES);
             try {
-                require(ESRI_MODULES, function(...imports) {
-                    // Create an object mapping the imports to their module name so that we don't have to keep track
-                    // of load order
-                    const importMapping = imports.reduce((memo, item, idx) => {
-                        const moduleName = ESRI_MODULES[idx].split('/').pop();
-                        memo[moduleName] = item
-                        return memo;
-                    }, {});
-                    (async() => {
-                        const mapRendered = await startApp(settings, importMapping);
-                        if (!mapRendered) {
-                            $(MAP_CONTAINER_ID).attr('data-drupal-messages', true)
-                            const messenger = new Drupal.Message();
-                            messenger.add(`No map data available for ${settings.cruiseName}`, {type: 'error'});
-                        }
-                    })();
-                });
+                await startApp(settings, imports);
             } catch (err) {
                 console.error('Failed to start app', err);
             }
