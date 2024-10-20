@@ -5,7 +5,6 @@ import {asGraphicsLayer} from './util/layers.js';
     const ESRI_MODULES = [
         'esri/Basemap',
         'esri/WebMap',
-        'esri/layers/FeatureLayer',
         'esri/views/MapView',
         'esri/widgets/Fullscreen',
         'esri/core/reactiveUtils',
@@ -22,7 +21,6 @@ import {asGraphicsLayer} from './util/layers.js';
 
     async function startApp({cruiseName, showShipTrack}, {
         Basemap,
-        FeatureLayer,
         Fullscreen,
         MapView,
         WebMap,
@@ -52,7 +50,7 @@ import {asGraphicsLayer} from './util/layers.js';
                 console.log(`${currentCruise} from queryFeatures`);
             }
 
-            const shipTrackLayer = await asGraphicsLayer(new FeatureLayer({
+            const shipTrackLayer = await asGraphicsLayer({
                 portalItem: {
                     id: VEHICLE_TRACKS_PORTAL_ITEM_ID,
                 },
@@ -68,11 +66,11 @@ import {asGraphicsLayer} from './util/layers.js';
                     },
                     type: 'simple',
                 },
-            }));
+            });
             layers.push(shipTrackLayer);
         }
 
-        const nautilusLayer = await asGraphicsLayer(new FeatureLayer({
+        const nautilusLayer = await asGraphicsLayer({
             portalItem: {
                 id: VEHICLE_POSITIONS_PORTAL_ITEM_ID,
             },
@@ -100,7 +98,7 @@ import {asGraphicsLayer} from './util/layers.js';
                     },
                 ],
             },
-        }));
+        });
         layers.push(nautilusLayer);
 
         if (showShipTrack) {

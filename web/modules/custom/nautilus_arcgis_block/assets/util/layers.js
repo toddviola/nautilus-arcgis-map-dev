@@ -3,6 +3,9 @@ const [Graphic, FeatureLayer] = await new Promise(resolve => {
 });
 
 export async function asGraphicsLayer(layer, options = {}) {
+    if (!(layer instanceof FeatureLayer)) {
+        layer = new FeatureLayer(layer);
+    }
     await layer.load();
     let query = layer.createQuery();
     query.where = layer.definitionExpression;
