@@ -124,11 +124,6 @@ import {asGraphicsLayer} from './util/layers.js';
             webmap.add(replacement);
         }
 
-        globalThis.refreshLayer = refreshLayer
-        globalThis.layers = layers;
-        globalThis.refresh = refresh;
-        globalThis.centerOnShip = centerOnShip;
-
         async function shipExtent() {
             const {extent} = await nautilusLayer.sourceLayer.queryExtent();
             extent.zoom = DEFAULT_ZOOM;
