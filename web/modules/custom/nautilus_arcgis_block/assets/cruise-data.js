@@ -7,7 +7,6 @@ import {asGraphicsLayer} from './util/layers.js';
     const ESRI_MODULES = [
         'esri/Basemap',
         'esri/WebMap',
-        'esri/layers/FeatureLayer',
         'esri/views/MapView',
         'esri/widgets/Expand',
         'esri/widgets/Fullscreen',
@@ -18,21 +17,20 @@ import {asGraphicsLayer} from './util/layers.js';
     async function renderMap(cruiseName, {
         Basemap,
         Expand,
-        FeatureLayer,
         Fullscreen,
         LayerList,
         Legend,
         MapView,
         WebMap,
     }) {
-        const shipTrack = await asGraphicsLayer(new FeatureLayer({
+        const shipTrack = await asGraphicsLayer({
             portalItem: {
                 id: OET_CRUISES_MASTER_PORTAL_ITEM_ID,
             },
             definitionExpression: `cruise = '${cruiseName}'`,
             layerId: 11,
             opacity: 1,
-        }), {
+        }, {
             renderer: {
                 symbol: {
                     color: '#990000', // dark red
@@ -42,23 +40,23 @@ import {asGraphicsLayer} from './util/layers.js';
                 type: 'simple',
             },
         });
-        const vehicleTracks = await asGraphicsLayer(new FeatureLayer({
+        const vehicleTracks = await asGraphicsLayer({
             portalItem: {
                 id: OET_CRUISES_MASTER_PORTAL_ITEM_ID,
             },
             definitionExpression: `cruise = '${cruiseName}'`,
             layerId: 10,
             opacity: 1,
-        }));
+        });
 
-        const mappingFootprints = await asGraphicsLayer(new FeatureLayer({
+        const mappingFootprints = await asGraphicsLayer({
             portalItem: {
                 id: OET_CRUISES_MASTER_PORTAL_ITEM_ID,
             },
             definitionExpression: `SurveyID = '${cruiseName}'`,
             layerId: 12,
             opacity: 1,
-        }));
+        });
 
         // Only include layers that have some features in them
         const layers = [];

@@ -5,7 +5,6 @@ import {asGraphicsLayer} from './util/layers.js';
     const ESRI_MODULES = [
         'esri/Basemap',
         'esri/WebMap',
-        'esri/layers/FeatureLayer',
         'esri/views/MapView',
         'esri/widgets/Fullscreen',
         'esri/core/reactiveUtils',
@@ -13,7 +12,7 @@ import {asGraphicsLayer} from './util/layers.js';
     const MAP_CONTAINER_ID = 'ship-location-map-container';
     const DEFAULT_ZOOM = 8;
     const REFRESH_INTERVAL_MINUTES = 5;
-    // Recenter on ship approximatly every 5 minutes.
+    // Recenter on ship approximately every 5 minutes.
     // * 'Approximately' because the centerOnShip function awaits some Promises before actually
     // recentering the map so it may be a bit longer than 5 minutes.
     const RECENTER_INTERVAL_MILLISECONDS = REFRESH_INTERVAL_MINUTES * 60 * 1000;
@@ -22,7 +21,6 @@ import {asGraphicsLayer} from './util/layers.js';
 
     async function startApp({cruiseName, showShipTrack}, {
         Basemap,
-        FeatureLayer,
         Fullscreen,
         MapView,
         WebMap,
@@ -52,7 +50,7 @@ import {asGraphicsLayer} from './util/layers.js';
                 console.log(`${currentCruise} from queryFeatures`);
             }
 
-            const shipTrackLayer = await asGraphicsLayer(new FeatureLayer({
+            const shipTrackLayer = await asGraphicsLayer({
                 portalItem: {
                     id: VEHICLE_TRACKS_PORTAL_ITEM_ID,
                 },
@@ -68,11 +66,11 @@ import {asGraphicsLayer} from './util/layers.js';
                     },
                     type: 'simple',
                 },
-            }));
+            });
             layers.push(shipTrackLayer);
         }
 
-        const nautilusLayer = await asGraphicsLayer(new FeatureLayer({
+        const nautilusLayer = await asGraphicsLayer({
             portalItem: {
                 id: VEHICLE_POSITIONS_PORTAL_ITEM_ID,
             },
@@ -100,7 +98,7 @@ import {asGraphicsLayer} from './util/layers.js';
                     },
                 ],
             },
-        }));
+        });
         layers.push(nautilusLayer);
 
         if (showShipTrack) {
@@ -125,11 +123,6 @@ import {asGraphicsLayer} from './util/layers.js';
             webmap.remove(layer);
             webmap.add(replacement);
         }
-
-        globalThis.refreshLayer = refreshLayer
-        globalThis.layers = layers;
-        globalThis.refresh = refresh;
-        globalThis.centerOnShip = centerOnShip;
 
         async function shipExtent() {
             const {extent} = await nautilusLayer.sourceLayer.queryExtent();
