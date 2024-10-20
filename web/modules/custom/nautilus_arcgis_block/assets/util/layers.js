@@ -1,6 +1,9 @@
-const [Graphic, FeatureLayer] = await new Promise(resolve => {
-    require(['esri/Graphic', 'esri/layers/FeatureLayer'], (...imports) => resolve(imports));
-});
+import {requireModules} from './imports.js';
+
+const {FeatureLayer, Graphic, Polyline} = await requireModules([
+    'esri/layers/FeatureLayer',
+    'esri/Graphic',
+]);
 
 export async function asGraphicsLayer(layer, options = {}) {
     if (!(layer instanceof FeatureLayer)) {
