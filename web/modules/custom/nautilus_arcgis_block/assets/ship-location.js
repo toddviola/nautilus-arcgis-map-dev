@@ -12,7 +12,7 @@ import {asGraphicsLayer} from './util/layers.js';
     const MAP_CONTAINER_ID = 'ship-location-map-container';
     const DEFAULT_ZOOM = 8;
     const REFRESH_INTERVAL_MINUTES = 5;
-    // Recenter on ship approximatly every 5 minutes.
+    // Recenter on ship approximately every 5 minutes.
     // * 'Approximately' because the centerOnShip function awaits some Promises before actually
     // recentering the map so it may be a bit longer than 5 minutes.
     const RECENTER_INTERVAL_MILLISECONDS = REFRESH_INTERVAL_MINUTES * 60 * 1000;
