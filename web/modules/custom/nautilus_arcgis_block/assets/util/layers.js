@@ -48,7 +48,7 @@ function fixPolylineIfCrossingIntlDateline(polyline) {
             const [lastX, lastY] = lastCoord ?? [];
             const [nextX, nextY] = coord;
             if ((lastX > 0 && nextX < 0) || (lastX < 0 && nextX > 0)) {
-                const midY = lastY + (nextY - lastY);
+                const midY = lastY + ((nextY - lastY) / 2);
                 // The new vertex is on the other side of the intl dateline from the previous vertices.
                 // Do these things:
                 // 1. Add a dynamically computed vertex at the dateline and halfway between the Y-coordinate
